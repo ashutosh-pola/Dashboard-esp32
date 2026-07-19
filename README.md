@@ -55,4 +55,3 @@ Now that the ESP32 is ready, we need to wire the parts together. Make sure you w
 Before running the Python file, open your computer's terminal and install the required modules by running:
 ```bash
 pip3 install flask flask-cors
-	This shares the power and ground across the whole board so everything turns on safely!
