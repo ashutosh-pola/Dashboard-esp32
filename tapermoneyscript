@@ -1,0 +1,44 @@
+// ==UserScript==
+// @name         Universal Edge Media Exporter
+// @namespace    http://tampermonkey.net/
+// @version      1.2
+// @description  Tracks HTML5 media on any website and sends to Flask
+// @match        http*://*/*
+// @grant        GM_xmlhttpRequest
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    function sendMediaData() {
+        const video = document.querySelector('video') || document.querySelector('audio');
+        if (!video) return;
+
+        let title = document.title;
+        let artist = window.location.hostname.replace('www.', '');
+        let progress = Math.round((video.currentTime / video.duration) * 100) || 0;
+        let isPlaying = !video.paused;
+
+        // Custom cleanups for popular sites
+        if (artist.includes("youtube.com")) {
+            const ytTitle = document.querySelector('h1.ytd-watch-metadata yt-formatted-string');
+            if (ytTitle) title = ytTitle.textContent.trim();
+            const channel = document.querySelector('#upload-info #channel-name a');
+            if (channel) artist = channel.textContent.trim();
+        }
+
+        GM_xmlhttpRequest({
+            method: "POST",
+            url: "http://127.0.0.1:5000/update_media",
+            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify({
+                playing: isPlaying,
+                title: title.substring(0, 30),
+                artist: artist,
+                progress: progress
+            })
+        });
+    }
+
+    setInterval(sendMediaData, 1000);
+})();
